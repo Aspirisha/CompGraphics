@@ -164,8 +164,8 @@ namespace D3D11Framework
     _RELEASE(m_pImmediateContext);
    
      // uncomment for debug purposes
-    /*   ID3D11Debug *debugDev = nullptr;
-     hr = m_pd3dDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDev));
+     /*  ID3D11Debug *debugDev = nullptr;
+     HRESULT hr = m_pd3dDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDev));
     if (debugDev != nullptr)
     {
       debugDev->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);

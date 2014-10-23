@@ -132,7 +132,7 @@ bool MyRender::Init(HWND hwnd)
   /*add directed light to scene*/
   DirectedLight light;
   light.Dir = XMFLOAT3(0.5, -0.5, -1);
-  light.Color = XMFLOAT4(0.5, 0.5, 0, 0.1);
+  light.Color = XMFLOAT4(0.5f, 0.5f, 0.0f, 0.1f);
   m_scene->addDirectedLight(light);
   
   m_scene->LoadObject("car00.x");
@@ -151,8 +151,8 @@ bool MyRender::Init(HWND hwnd)
   ProjectorLight newLight;
   newLight.Pos = XMFLOAT3(7, 0.5, -1.5);
   newLight.Color = XMFLOAT4(1, 0, 0, 0.5);
-  newLight.angleX = 0.4;
-  newLight.angleY = 0.4;
+  newLight.angleX = 0.4f;
+  newLight.angleY = 0.4f;
   newLight.Direction = XMFLOAT3(1, 0, 0);
   m_car->addProjector(newLight);
 
@@ -190,9 +190,9 @@ bool MyRender::Init(HWND hwnd)
 
 bool MyRender::Draw()
 {
-  static float dfi = 0.02;
-  static float fi = 0;
-  static float radius = 30;
+  static float dfi = 0.02f;
+  static float fi = 0.0f;
+  static float radius = 30.0f;
   
   float dz = radius * (cos(fi + dfi) - cos(fi));
   float dx = radius * (sin(fi + dfi) - sin(fi));
@@ -228,10 +228,10 @@ bool MyRender::Draw()
     }
   }
   // add all point lights info to constant buffer
-  for (int i = 0, lightIndex = 0; i < m_scene->GetObjectsNumber(); i++)
+  for (size_t i = 0, lightIndex = 0; i < m_scene->GetObjectsNumber(); i++)
   {
     MyObject *object = m_scene->GetObjectAt(i);
-    for (int j = 0; j < object->GetPointLightsNumber(); j++, lightIndex++)
+    for (size_t j = 0; j < object->GetPointLightsNumber(); j++, lightIndex++)
     {
       SimpleLight *bulb = object->GetPointLightAt(j);
       XMMATRIX bulbWorldMatrix = (XMLoadFloat4x4(&(object->GetWorldMatrix())));
@@ -338,6 +338,7 @@ bool MyRender::Close()
 	_RELEASE(m_pVertexLayout);
 	_RELEASE(m_pVertexShader);
 	_RELEASE(m_pPixelShader);
+  _RELEASE(m_pPixelShaderSolid);
   _RELEASE(m_pIndexBuffer);
   _RELEASE(m_pConstantBuffer);
   delete m_car;

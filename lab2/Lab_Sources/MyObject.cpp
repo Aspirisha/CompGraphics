@@ -65,10 +65,10 @@ HRESULT MyObject::LoadFromFile(const char *fileName)
   m_vertices = new SimpleVertex[m_verticesNumber];  
   m_indices = new UINT[m_indicesNumber];
 
-  for (int j = 0; j < m_scene->mNumMeshes; j++)
+  for (size_t j = 0; j < m_scene->mNumMeshes; j++)
   {
     aiMesh *mesh = m_scene->mMeshes[j];
-    for (int i = 0; i < mesh->mNumVertices; ++i)
+    for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
       m_vertices[i].Pos = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
       m_vertices[i].Normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
@@ -86,7 +86,7 @@ HRESULT MyObject::LoadFromFile(const char *fileName)
 
   int offset = 0;
   int indicesOffset = 0;
-  for (int k = 0; k < m_scene->mNumMeshes; k++)
+  for (size_t k = 0; k < m_scene->mNumMeshes; k++)
   {
     aiMesh *mesh = m_scene->mMeshes[k];  
     for (size_t i = 0; i < mesh->mNumFaces; i++)
