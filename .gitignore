@@ -16,6 +16,7 @@
 *.lib
 *.zip
 *.opensdf
-*/Release/
+*.dll_suf
 *.obj
+*.exp
 Framework/*

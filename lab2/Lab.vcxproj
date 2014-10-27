@@ -49,14 +49,15 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);assimp/</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies);zlibstatic.lib;assimp.lib;</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <PreventDllBinding>true</PreventDllBinding>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>Lab_Headers;Framework</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
@@ -64,22 +65,21 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Link>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>assimp/</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies);zlibstatic.lib;assimp.lib;</AdditionalDependencies>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>Lab_Headers;Framework</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Lab_Sources\main.cpp" />
     <ClCompile Include="Lab_Sources\MyCamera.cpp" />
     <ClCompile Include="Lab_Sources\MyInputListener.cpp" />
-    <ClCompile Include="Lab_Sources\MyMesh.cpp" />
     <ClCompile Include="Lab_Sources\MyObject.cpp" />
     <ClCompile Include="Lab_Sources\MyRender.cpp" />
     <ClCompile Include="Framework\Framework.cpp" />
@@ -92,7 +92,6 @@
   <ItemGroup>
     <ClInclude Include="Lab_Headers\MyCamera.h" />
     <ClInclude Include="Lab_Headers\MyInputListener.h" />
-    <ClInclude Include="Lab_Headers\MyMesh.h" />
     <ClInclude Include="Lab_Headers\MyObject.h" />
     <ClInclude Include="Lab_Headers\MyRender.h" />
     <ClInclude Include="Lab_Headers\MyScene.h" />

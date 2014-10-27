@@ -31,9 +31,6 @@
     <ClCompile Include="Lab_Sources\MyRender.cpp">
       <Filter>Lab_sources</Filter>
     </ClCompile>
-    <ClCompile Include="Lab_Sources\MyMesh.cpp">
-      <Filter>Lab_sources</Filter>
-    </ClCompile>
     <ClCompile Include="Lab_Sources\MyScene.cpp">
       <Filter>Lab_sources</Filter>
     </ClCompile>
@@ -79,9 +76,6 @@
       <Filter>Lab_headers</Filter>
     </ClInclude>
     <ClInclude Include="Lab_Headers\MyRender.h">
-      <Filter>Lab_headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Lab_Headers\MyMesh.h">
       <Filter>Lab_headers</Filter>
     </ClInclude>
     <ClInclude Include="Lab_Headers\MyScene.h">

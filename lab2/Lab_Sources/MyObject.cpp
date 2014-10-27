@@ -5,19 +5,11 @@
 #include <scene.h>
 #include <postprocess.h>
 
-typedef const aiScene *(*impFile)(const char *, unsigned int);
 using namespace D3D11Framework;
 
 HRESULT MyObject::m_LoadScene(const char *fileName)
 {
-  HMODULE handler = LoadLibrary("assimp.dll");
-  if (handler == nullptr)
-  {
-    Log::Get()->Err("assimp.dll not found in %PATH% and in application directory. Shutting down...");
-    return S_FALSE;
-  }
-  impFile f = (impFile)GetProcAddress(handler, "aiImportFile");
-  m_scene = f(fileName, aiProcessPreset_TargetRealtime_MaxQuality);
+  m_scene = aiImportFile(fileName, aiProcessPreset_TargetRealtime_MaxQuality);
   
   if (!m_scene)
     return S_FALSE;
@@ -107,7 +99,14 @@ MyObject::~MyObject()
     delete[] m_indices;
   if (m_vertices)
     delete[] m_vertices;
- // m_scene->~aiScene();
+  
+  for (ProjectorLight *light: m_projectorLights) 
+    delete light;
+  for (DirectedLight *light: m_directedLights)
+    delete light;
+  for (SimpleLight *light: m_pointLights)
+    delete light;
+
 }
 
 XMFLOAT4X4 MyObject::GetWorldMatrix() const

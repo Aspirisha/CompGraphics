@@ -148,7 +148,7 @@ bool MyRender::Init(HWND hwnd)
 
   float width = 1280.0f;
 	float height = 1024.0f;
-  m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width/height, 0.1f, 100.0f );
+  m_Projection = XMMatrixPerspectiveFovLH(XM_PI / 3.0f, width/height, 0.1f, 100.0f );
 
   return true;
 }

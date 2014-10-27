@@ -26,10 +26,9 @@ int main(void)
   desc.height = 480;
 
   input->SetRender(render);
-  input->SetMouseLocked(true, desc.width >> 1, desc.height >> 1);
   framework.SetRender(render);
   framework.Init(desc);
-  framework.SetMouseLocked(true, desc.width >> 1, desc.height >> 1);
+  //framework.SetMouseLocked(true, desc.width >> 1, desc.height >> 1);
   framework.AddInputListener(input);
 
   framework.Run();

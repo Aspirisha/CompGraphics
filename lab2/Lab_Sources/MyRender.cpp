@@ -3,7 +3,6 @@
 #include <d3dcompiler.h>
 #include "MyRender.h"
 #include "MyObject.h"
-#include "MyMesh.h"
 #include "macros.h"
 #include "Log.h"
 
