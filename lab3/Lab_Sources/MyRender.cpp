@@ -82,7 +82,8 @@ bool MyRender::Init(HWND hwnd)
   {
     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }, // 12 is 3 * 4 for POSITION element
+    { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },  
    
   };
   UINT numElements = ARRAYSIZE( layout );
@@ -135,9 +136,19 @@ bool MyRender::Init(HWND hwnd)
   light.Color = XMFLOAT4(0.5f, 0.5f, 0.0f, 0.1f);
   m_scene->addDirectedLight(light);
   
-  m_scene->LoadObject("car00.x");
-  m_scene->LoadObject("sphere.obj");
-  m_scene->LoadObject("models/tree.3ds");
+  m_scene->LoadObject("", "car00.x");
+  m_scene->LoadObject("", "sphere.obj");
+  m_scene->LoadObject("models/house/", "house.x");
+ // m_scene->LoadObject("models/tree1/", "tree.3ds");
+  m_scene->LoadObject("models/table/", "table.x");
+
+  for (size_t i = 0; i < m_scene->GetObjectsNumber(); i++)
+  {
+    MyObject *obj = m_scene->GetObjectAt(i); 
+    if (obj->HasTextures())
+      obj->LoadTextures(m_pd3dDevice);
+  }
+
   m_car = m_scene->GetObjectAt(1);
   m_sun = m_scene->GetObjectAt(2);
   m_sun->Translate(30, 10, 10);
@@ -184,8 +195,9 @@ bool MyRender::Init(HWND hwnd)
 
   float width = 1280.0f;
 	float height = 1024.0f;
-  m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width/height, 0.1f, 100.0f );
+  m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width/height, 0.1f, 500.0f );
 
+  
   return true;
 }
 
@@ -265,7 +277,6 @@ bool MyRender::Draw()
   cb.isLightEnabled[0] = m_enableProjectorLight;
   cb.isLightEnabled[1] = m_enablePointLight;
   cb.isLightEnabled[2] = m_enableDirectedLight;
-  cb.isLightEnabled[3] = 0;
 
   for (size_t idx = 0; idx < m_scene->GetObjectsNumber(); idx++)
   {
@@ -329,6 +340,18 @@ bool MyRender::Draw()
       cb.mView = XMMatrixTranspose(view);
 	    cb.mProjection = XMMatrixTranspose(m_Projection);
       cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+      cb.isLightEnabled[3] = 0; // here we store info about if texture for this mesh is enabled
+      if (object->HasTextures()) 
+      {
+        ID3D11ShaderResourceView *tex = object->GetTextureAt(meshNumber);
+        if (tex != nullptr)
+        {  
+          ID3D11SamplerState *sampler = object->GetSampler();
+          m_pImmediateContext->PSSetShaderResources( 0, 1, &tex);
+	        m_pImmediateContext->PSSetSamplers( 0, 1, &sampler);
+          cb.isLightEnabled[3] = 1;
+        }
+      }
 	    m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, NULL, &cb, 0, 0);
   
 	    m_pImmediateContext->VSSetShader(m_pVertexShader, NULL, 0);
@@ -337,6 +360,9 @@ bool MyRender::Draw()
 	      m_pImmediateContext->PSSetShader(m_pPixelShaderSolid, NULL, 0);
       else
         m_pImmediateContext->PSSetShader(m_pPixelShader, NULL, 0);
+
+
+
 	    m_pImmediateContext->PSSetConstantBuffers( 0, 1, &m_pConstantBuffer);
       m_pImmediateContext->DrawIndexed(object->GetIndicesNumberAt(meshNumber), 0, 0);
 

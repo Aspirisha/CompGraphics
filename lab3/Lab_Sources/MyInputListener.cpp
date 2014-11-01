@@ -55,16 +55,16 @@ bool MyInputListener::KeyPressed(const KeyEvent &event)
     switch (event.code)
     {
     case KEY_W:
-      m_render->GetCamera()->WalkForward(0.05f);
+      m_render->GetCamera()->WalkForward(0.5f);
       break;
     case KEY_S:
-      m_render->GetCamera()->WalkForward(-0.05f);
+      m_render->GetCamera()->WalkForward(-0.5f);
       break;
     case KEY_A:
-      m_render->GetCamera()->WalkLeft(-0.05f);
+      m_render->GetCamera()->WalkLeft(-0.5f);
       break;
     case KEY_D:
-      m_render->GetCamera()->WalkLeft(0.05f);
+      m_render->GetCamera()->WalkLeft(0.5f);
       break;
     case KEY_DOWN:
       m_render->GetMyObject()->RotateX(0.05f);
@@ -128,6 +128,13 @@ bool MyInputListener::MouseWheel(const MouseEventWheel &arg)
       m_render->GetCamera()->WalkForward(-1);
     else
       m_render->GetCamera()->WalkForward(1);
+  }
+  else 
+  {
+    if (arg.wheel > 0)
+      m_render->GetCamera()->IncreaseSpeed();
+    else
+      m_render->GetCamera()->DecreaseSpeed();
   }
   return true;
 }

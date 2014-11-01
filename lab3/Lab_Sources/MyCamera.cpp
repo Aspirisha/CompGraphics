@@ -114,7 +114,6 @@ void MyCamera::m_rotateHor()
   }
   
   m_deltaHorAngle = 0;
-  D3D11Framework::Log::Get()->Debug("Camera position: x = %f, y = %f, z = %f", m_Position.x, m_Position.y, m_Position.z);
 }
 
 void MyCamera::m_rotateVer()
@@ -135,8 +134,6 @@ void MyCamera::m_rotateVer()
 	  XMStoreFloat3(&m_LookAt, XMVector3TransformNormal(XMLoadFloat3(&m_LookAt), rotation));
   }
   m_deltaVerAngle = 0;
-
-  D3D11Framework::Log::Get()->Debug("Camera position: x = %f, y = %f, z = %f", m_Position.x, m_Position.y, m_Position.z);
 }
 
 void MyCamera::m_walk()
@@ -165,12 +162,24 @@ void MyCamera::m_walk()
     XMVECTOR lookAt = XMLoadFloat3(&m_LookAt);
     XMVECTOR walkVector = (m_deltaPosition.z * lookAt + m_deltaPosition.x * right);
 
-    eye += 5 * walkVector;
+    eye += m_speed * walkVector;
   }
   XMStoreFloat3(&m_Position, eye);
   m_deltaPosition.z = 0;
   m_deltaPosition.x = 0;
 }
+
+void MyCamera::IncreaseSpeed()
+{
+  m_speed += 0.1f;
+}
+
+void MyCamera::DecreaseSpeed()
+{
+  if (m_speed > 0.1f)
+    m_speed -= 0.1f;
+}
+
 
 void MyCamera::SwitchType()
 {

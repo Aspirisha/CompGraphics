@@ -4,12 +4,15 @@
 #include <vector>
 
 struct aiScene;
+struct aiString;
+
 
 struct SimpleVertex
 {
 	XMFLOAT3 Pos;
   XMFLOAT3 Normal;
   XMFLOAT4 Color;
+  XMFLOAT2 texCoord;
 };
 
 struct SimpleLight
@@ -35,9 +38,12 @@ class MyObject
 {
 public:
   MyObject();
-  MyObject(const char* fileName);
+  MyObject(const char *path, const char* fileName);
   virtual ~MyObject();
-  HRESULT LoadFromFile(const char *fileName);
+  HRESULT LoadFromFile(const char *path, const char *fileName);
+
+  bool HasTextures() const { return m_hasTextures; }
+  HRESULT LoadTextures(ID3D11Device *device); // must be called if has textures
 
   const SimpleVertex *GetVerticesAt(size_t idx) const { return m_vertices[idx]; }
   const UINT *GetIndicesAt(size_t idx) { return m_indices[idx]; }
@@ -56,7 +62,8 @@ public:
 
   XMFLOAT4X4 GetWorldMatrix() const;
   XMFLOAT4X4 GetRotationMatrix() const;
-  
+  void scale(double ratio);
+
   void addProjector(const ProjectorLight &projector);
   void addPointLight(const SimpleLight &bulb);
   void addDirectedLight(const DirectedLight &sun);
@@ -65,20 +72,34 @@ public:
   void RotateY(float angle);
   void RotateZ(float angle);
   void Translate(float dx, float dy, float dz);
+
+  ID3D11ShaderResourceView *GetTextureAt(size_t idx);
+  ID3D11SamplerState *GetSampler();
 protected:
   HRESULT m_LoadScene(const char *fileName);
 
-  mutable XMFLOAT4X4 m_World; // we use symmetry of torus: it's top is mirrored bottom part
+  const aiScene *m_scene;
+
+  /**
+   * Object data
+   */
+  mutable XMFLOAT4X4 m_World;
   XMFLOAT4X4 m_rotate;
   XMFLOAT4X4 m_translate;
+  size_t m_numMeshes;
 
-  const aiScene *m_scene;
   SimpleVertex **m_vertices;
   UINT **m_indices; // indices array for every mesh
   size_t *m_verticesNumber;
   size_t *m_indicesNumber;
+
+  // Textures data
+  bool m_hasTextures;
+  aiString *m_textureNames;
+  ID3D11ShaderResourceView** m_textures;
+  ID3D11SamplerState* m_texSamplerState;
+  
   unsigned *m_primitiveTypes;
-  size_t m_numMeshes;
   mutable bool m_worldMatrixUpdated;
 
   std::vector<ProjectorLight*> m_projectorLights;

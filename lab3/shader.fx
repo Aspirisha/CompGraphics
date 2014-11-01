@@ -10,19 +10,21 @@ cbuffer ConstantBuffer
   float4 vBulbLightPos[1];
   float4 vDirectedLightColor[1];
   float4 vDirectedLightDir[1];
-  uint4 isLightEnabled; 
+  uint4 isLightEnabled; // 4th component is used to define if texture enabled
   //float vLightAngleX[2];
   //float vLightAngleY[2];
   //uint4 numberOfLights
 	float4 vOutputColor;
-  
 }
+
+Texture2D g_MeshTexture;            // Color texture for mesh
 
 struct VS_INPUT
 {
   float4 Pos : POSITION;
   float3 Norm : NORMAL;
   float4 Color: COLOR;
+  float3 Tex : TEXCOORD; 
 };
 
 struct PS_INPUT
@@ -31,6 +33,14 @@ struct PS_INPUT
   float4 Pos : SV_POSITION;
   float4 Color: COLOR;
   float3 Norm : TEXCOORD0;
+  float3 Tex : TEXCOORD1; 
+};
+
+SamplerState MeshTextureSampler
+{
+    Filter = MIN_MAG_MIP_LINEAR;
+    AddressU = Wrap;
+    AddressV = Wrap;
 };
 
 PS_INPUT VS( VS_INPUT input )
@@ -42,13 +52,19 @@ PS_INPUT VS( VS_INPUT input )
   output.Pos = mul( output.Pos, Projection );
   output.Norm = mul( input.Norm, World );
   output.Color = input.Color;
+  output.Tex = input.Tex;
   return output;
 }
 
 float4 PS( PS_INPUT input) : SV_Target
 {
-  float4 finalColor = 0.3 * input.Color;	
-    
+  float4 finalColor = 0;
+
+  if (isLightEnabled[3] == 0)
+    finalColor = 0.3 * input.Color;	
+  else
+    finalColor = g_MeshTexture.Sample(MeshTextureSampler, input.Tex);
+
   input.Norm = normalize(input.Norm);
      
   if (isLightEnabled[0] != 0)

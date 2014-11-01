@@ -14,38 +14,43 @@ HRESULT MyObject::m_LoadScene(const char *fileName)
   if (!m_scene)
     return S_FALSE;
   
-  Log::Get()->Debug("m_scene has %i cameras", m_scene->mNumCameras);
-  Log::Get()->Debug("m_scene has %i animations", m_scene->mNumAnimations);
-  Log::Get()->Debug("m_scene has %i lights", m_scene->mNumLights);
-  Log::Get()->Debug("m_scene has %i meshes", m_scene->mNumMeshes);
-  Log::Get()->Debug("m_scene->mesh[0] has %i faces", m_scene->mMeshes[0]->mNumFaces);
-  for (int i = 0; i < 100; i++)
-    Log::Get()->Debug("m_scene->mesh[0]->face[i] has %i vertices", m_scene->mMeshes[0]->mFaces[i].mNumIndices);
   return S_OK;
   
 }
 
 
 MyObject::MyObject() : m_indices(nullptr), m_vertices(nullptr), m_indicesNumber(0), m_verticesNumber(0), 
-  m_scene(0), m_worldMatrixUpdated(true), m_primitiveTypes(0), m_numMeshes(0)
+  m_scene(0), m_worldMatrixUpdated(true), m_primitiveTypes(0), m_numMeshes(0), m_textureNames(0), 
+  m_textures(0), m_hasTextures(false)
 {
   XMStoreFloat4x4(&m_World, XMMatrixIdentity());
   XMStoreFloat4x4(&m_rotate, XMMatrixIdentity());
   XMStoreFloat4x4(&m_translate, XMMatrixIdentity());
 }
 
-MyObject::MyObject(const char *fileName) : m_indices(nullptr), m_vertices(nullptr), m_indicesNumber(0), m_verticesNumber(0), 
-  m_scene(0), m_worldMatrixUpdated(true), m_primitiveTypes(0), m_numMeshes(0)
+MyObject::MyObject(const char *path, const char *fileName) : m_indices(nullptr), m_vertices(nullptr), m_indicesNumber(0), m_verticesNumber(0), 
+  m_scene(0), m_worldMatrixUpdated(true), m_primitiveTypes(0), m_numMeshes(0), m_textureNames(0), 
+  m_textures(0), m_hasTextures(false)
 {
   XMStoreFloat4x4(&m_World, XMMatrixIdentity());
   XMStoreFloat4x4(&m_rotate, XMMatrixIdentity());
   XMStoreFloat4x4(&m_translate, XMMatrixIdentity());
-  LoadFromFile(fileName);
+  LoadFromFile(path, fileName);
 }
 
-HRESULT MyObject::LoadFromFile(const char *fileName)
+HRESULT MyObject::LoadFromFile(const char *path, const char *fileName)
 {
-  m_LoadScene(fileName);
+  std::string fullFileName = path;
+  fullFileName.append(fileName);
+
+  m_LoadScene(fullFileName.c_str());
+
+  m_hasTextures = false;
+
+  if (m_scene->HasTextures())
+    Log::Get()->Debug("Model in %s conatins textures", fullFileName.c_str());
+  else
+    Log::Get()->Debug("Model in %s has NO textures", fullFileName.c_str());
 
   m_numMeshes = m_scene->mNumMeshes;
   m_vertices = new SimpleVertex*[m_numMeshes];
@@ -76,27 +81,78 @@ HRESULT MyObject::LoadFromFile(const char *fileName)
     m_indices[i] = new UINT[m_indicesNumber[i]];
   }
   
-  
+  aiString aiPath(path);
 
-  for (size_t j = 0; j < m_scene->mNumMeshes; j++)
+  for (size_t j = 0; j < m_numMeshes; j++)
   {
     aiMesh *mesh = m_scene->mMeshes[j];
+    SimpleVertex *vertices = m_vertices[j];
+    aiMaterial *mat = m_scene->mMaterials[mesh->mMaterialIndex]; // TODO now we load as many textures as there are meshes, fix it then
+   
+    aiTexture tex;
+    aiString str;
+
+    Log::Get()->Debug("there are %i textures of type %i", mat->GetTextureCount(aiTextureType_DIFFUSE), aiTextureType_DIFFUSE);
+    
+    if (AI_SUCCESS == mat->GetTexture(aiTextureType_DIFFUSE, 0, &str)) 
+    {
+      Log::Get()->Debug("FOUND TEXTURE %i with index %i!", aiTextureType_DIFFUSE, 0);
+      if (!m_hasTextures) // now we assume very simple: if one mesh has texture, than we assume ALL meshes in this model have 1 texture
+      {
+        m_textureNames = new aiString[m_numMeshes];
+        m_hasTextures = true;
+      }
+      m_textureNames[j] = aiPath;
+      m_textureNames[j].Append(str.C_Str());
+    } else {
+      for (int i = 0; i < 0xD; i++)
+      {
+        //int p = mat->GetTextureCount();
+        if (AI_SUCCESS == mat->GetTexture((aiTextureType)i, 0, &str)) 
+        {
+           Log::Get()->Debug("FOUND TEXTURE %i with index %i!", i, 0);
+        }
+      }
+    }
+
+    
+    if(AI_SUCCESS == mat->Get(AI_MATKEY_NAME, str)) 
+    {
+      Log::Get()->Debug("Mat name = %s", str.C_Str());
+    }
+
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
-      m_vertices[j][i].Pos = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-      m_vertices[j][i].Normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+      vertices[i].Pos = XMFLOAT3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+      vertices[i].Normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+       
       if (mesh->mColors[0] != nullptr)
       {
         if (!mesh->mColors[0][i].IsBlack())
-          m_vertices[j][i].Color = XMFLOAT4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, mesh->mColors[0][i].a);
+          vertices[i].Color = XMFLOAT4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, mesh->mColors[0][i].a);
         else
-          m_vertices[j][i].Color = XMFLOAT4(0, 0, 0, 0);
+          vertices[i].Color = XMFLOAT4(0, 0, 0, 0);
       }
       else
-         m_vertices[j][i].Color = XMFLOAT4(0, 1, 0, 1);
+         vertices[i].Color = XMFLOAT4(0, 1, 0, 1);
     }
-  }
 
+    if (mesh->mTextureCoords[0] != 0)
+    {
+      for (size_t i = 0; i < mesh->mNumVertices; ++i)
+      {
+        vertices[i].texCoord = XMFLOAT2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+      }
+    } 
+    else 
+    {
+      for (size_t i = 0; i < mesh->mNumVertices; ++i)
+      {
+        vertices[i].texCoord = XMFLOAT2(0, 0);
+      }
+    }
+
+  }
   
   for (size_t k = 0; k < m_scene->mNumMeshes; k++)
   {
@@ -224,4 +280,42 @@ size_t MyObject::GetMeshesNumber()
 unsigned MyObject::GetMeshPrimitiveTypeAt(size_t idx) 
 { 
   return m_primitiveTypes[idx]; 
+}
+
+HRESULT MyObject::LoadTextures(ID3D11Device *device) 
+{
+  m_textures = new ID3D11ShaderResourceView*[m_numMeshes];
+  HRESULT hr = S_OK;
+  for (int i = 0; i < m_numMeshes; i++)
+  {
+    hr = D3DX11CreateShaderResourceViewFromFile(device, m_textureNames[i].C_Str(), NULL, NULL, m_textures + i, NULL);
+    if (FAILED(hr))
+      m_textures[i] = nullptr;
+  }
+
+  D3D11_SAMPLER_DESC sampDesc;
+	ZeroMemory(&sampDesc, sizeof(sampDesc));
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+  sampDesc.MinLOD = 0;
+  sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+  
+  hr = device->CreateSamplerState( &sampDesc, &m_texSamplerState);
+
+  return S_OK;
+}
+
+ID3D11ShaderResourceView *MyObject::GetTextureAt(size_t idx)
+{
+  if (idx >= m_numMeshes)
+    return 0;
+  return m_textures[idx];
+}
+
+ID3D11SamplerState *MyObject::GetSampler()
+{
+  return m_texSamplerState;
 }

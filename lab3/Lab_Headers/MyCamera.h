@@ -21,6 +21,9 @@ public:
   void Update();
   void SwitchType();
   CAMERA_TYPE GetType() { return m_type; }
+
+  void IncreaseSpeed();
+  void DecreaseSpeed();
 private:
   void m_rotateHor();
   void m_rotateVer();

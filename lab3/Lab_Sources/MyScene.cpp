@@ -15,7 +15,6 @@ MyScene::MyScene()
   m_verticesNumber = new size_t[m_numMeshes];
   m_indicesNumber = new size_t[m_numMeshes];
   m_indices = new UINT*[m_numMeshes];
-  m_primitiveTypes = new unsigned[m_numMeshes];
 
   m_verticesNumber[0] = 4;
   m_indicesNumber[0] = 6;
@@ -53,11 +52,11 @@ MyScene::MyScene()
   }
 }
 
-HRESULT MyScene::LoadObject(const char *fileName)
+HRESULT MyScene::LoadObject(const char *path, const char *fileName)
 {
   MyObject *newObj = new MyObject;
 
-  HRESULT hr = newObj->LoadFromFile(fileName);
+  HRESULT hr = newObj->LoadFromFile(path, fileName);
   if (FAILED(hr))
   {
     Log::Get()->Err("Error loading object from file %s", fileName);

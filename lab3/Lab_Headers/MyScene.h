@@ -6,7 +6,7 @@ class MyScene : public MyObject
 {
 public:
   MyScene();
-  long LoadObject(const char *fileName);
+  long LoadObject(const char *path, const char *fileName);
   size_t GetObjectsNumber() const { return m_objects.size(); }
   MyObject *GetObjectAt(size_t idx);
   const std::vector<MyObject *> &GetObjects() const { return m_objects; } 
