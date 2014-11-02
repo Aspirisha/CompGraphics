@@ -90,6 +90,28 @@ bool MyInputListener::KeyPressed(const KeyEvent &event)
     case KEY_3:
       m_render->SwitchProjectorLights();
       break;
+    case KEY_M:
+      m_render->SwitchMipmapFiltration();
+      break;
+    case KEY_SHIFT:
+      m_shiftPressed = true;
+      break;
+    case KEY_PLUS:
+      if (!m_shiftPressed)
+        break;
+      m_render->IncreaseMipmapBias();
+      break;
+    case KEY_MINUS:
+      if (!m_shiftPressed)
+        break;
+      m_render->DecreaseMipmapBias();
+      break;
+    case KEY_F:
+      m_render->SwitchMinFiltration();
+      break;
+    case KEY_G:
+      m_render->SwitchMagFiltration();
+      break;
     default:
       printf("key press %c\n", event.wc);
     }
@@ -112,6 +134,28 @@ bool MyInputListener::KeyPressed(const KeyEvent &event)
       break;
     case KEY_SPACE:
       m_render->GetCamera()->SwitchType();
+      break;
+    case KEY_M:
+      m_render->SwitchMipmapFiltration();
+      break;
+    case KEY_SHIFT:
+      m_shiftPressed = true;
+      break;
+    case KEY_PLUS:
+      if (!m_shiftPressed)
+        break;
+      m_render->IncreaseMipmapBias();
+      break;
+    case KEY_MINUS:
+      if (!m_shiftPressed)
+        break;
+      m_render->DecreaseMipmapBias();
+      break;
+    case KEY_F:
+      m_render->SwitchMinFiltration();
+      break;
+    case KEY_G:
+      m_render->SwitchMagFiltration();
       break;
     default:
       printf("key press %c\n", event.wc);
@@ -136,5 +180,17 @@ bool MyInputListener::MouseWheel(const MouseEventWheel &arg)
     else
       m_render->GetCamera()->DecreaseSpeed();
   }
+  return true;
+}
+
+bool MyInputListener::KeyReleased(const KeyEvent &event)
+{
+  switch (event.code)
+  {
+  case KEY_SHIFT:
+    m_shiftPressed = false;
+    break;
+  }
+
   return true;
 }

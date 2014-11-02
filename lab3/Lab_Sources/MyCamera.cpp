@@ -6,7 +6,7 @@ const DWORD millisBetweenRecounts = 40; // 25 fps
 
 MyCamera::MyCamera()
 {
-  m_Position = XMFLOAT3(0.0f, 0.0f, -3.0f);
+  m_Position = XMFLOAT3(0.0f, 0.0f, -20.0f);
   m_LookAt = XMFLOAT3(0.0f, 0.0f, 1.0f);
   m_Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
   m_Right = XMFLOAT3(1.0f, 0.0f, 0.0f);

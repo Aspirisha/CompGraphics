@@ -6,6 +6,23 @@
 struct aiScene;
 struct aiString;
 
+__declspec(align(16)) struct ConstantBuffer
+{
+	XMMATRIX mWorld;
+	XMMATRIX mView;
+	XMMATRIX mProjection;
+  XMFLOAT4 vLightColor[2];
+  XMFLOAT4 vLightDir[2];
+  XMFLOAT4 vLightPos[2];
+  XMFLOAT4 vBulbLightColor[1];
+  XMFLOAT4 vBulbLightPos[1];
+  XMFLOAT4 vDirectedLightColor[1];
+  XMFLOAT4 vDirectedLightDir[1];
+  UINT isLightEnabled[4];   
+//  FLOAT vLightAngleX[2];
+ // FLOAT vLightAngleY[2];
+  XMFLOAT4 vOutputColor;
+};
 
 struct SimpleVertex
 {
@@ -75,6 +92,8 @@ public:
 
   ID3D11ShaderResourceView *GetTextureAt(size_t idx);
   ID3D11SamplerState *GetSampler();
+  bool Draw(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ConstantBuffer &cb, const XMMATRIX &view, const XMMATRIX &projection, 
+                    ID3D11VertexShader *pVertexShader, ID3D11PixelShader *pixelShader, ID3D11Buffer *constantBuffer); // draw object here, call it from Render::Draw
 protected:
   HRESULT m_LoadScene(const char *fileName);
 
@@ -97,7 +116,6 @@ protected:
   bool m_hasTextures;
   aiString *m_textureNames;
   ID3D11ShaderResourceView** m_textures;
-  ID3D11SamplerState* m_texSamplerState;
   
   unsigned *m_primitiveTypes;
   mutable bool m_worldMatrixUpdated;

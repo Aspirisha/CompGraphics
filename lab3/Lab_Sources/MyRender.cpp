@@ -7,24 +7,6 @@
 #include "macros.h"
 #include "Log.h"
 
-__declspec(align(16)) struct ConstantBuffer
-{
-	XMMATRIX mWorld;
-	XMMATRIX mView;
-	XMMATRIX mProjection;
-  XMFLOAT4 vLightColor[2];
-  XMFLOAT4 vLightDir[2];
-  XMFLOAT4 vLightPos[2];
-  XMFLOAT4 vBulbLightColor[1];
-  XMFLOAT4 vBulbLightPos[1];
-  XMFLOAT4 vDirectedLightColor[1];
-  XMFLOAT4 vDirectedLightDir[1];
-  UINT isLightEnabled[4];   
-//  FLOAT vLightAngleX[2];
- // FLOAT vLightAngleY[2];
-  XMFLOAT4 vOutputColor;
-};
-
 MyRender::MyRender(DWORD fps)
 {
   m_pVertexShader = nullptr;
@@ -40,6 +22,11 @@ MyRender::MyRender(DWORD fps)
   m_enableProjectorLight = true;
   m_enablePointLight = true;
   m_fps = fps;
+  m_texSamplerState = nullptr;
+  m_mipmapFiltration = MipmapFiltration::MIP_LINEAR;
+  m_minFiltration = MinMagFiltration::MINMAG_LINEAR;
+  m_magFiltration = MinMagFiltration::MINMAG_LINEAR;
+  m_mipmapBias = 0.0f;
 }
 
 
@@ -129,18 +116,18 @@ bool MyRender::Init(HWND hwnd)
 	}
   /**************************************************************/
 
-  m_scene = new MyScene;
+  m_scene = new MyScene();
   /*add directed light to scene*/
   DirectedLight light;
   light.Dir = XMFLOAT3(0.5, -0.5, -1);
   light.Color = XMFLOAT4(0.5f, 0.5f, 0.0f, 0.1f);
   m_scene->addDirectedLight(light);
   
-  m_scene->LoadObject("", "car00.x");
-  m_scene->LoadObject("", "sphere.obj");
-  m_scene->LoadObject("models/house/", "house.x");
- // m_scene->LoadObject("models/tree1/", "tree.3ds");
-  m_scene->LoadObject("models/table/", "table.x");
+  m_car = m_scene->LoadObject("models/car/", "car00.x");
+  m_sun = m_scene->LoadObject("models/sun/", "sphere.obj");
+  m_house = m_scene->LoadObject("models/house/", "house.x");
+  //m_scene->LoadObject("models/tree1/", "tree.3ds");
+  m_table = m_scene->LoadObject("models/table/", "table.x");
 
   for (size_t i = 0; i < m_scene->GetObjectsNumber(); i++)
   {
@@ -149,10 +136,9 @@ bool MyRender::Init(HWND hwnd)
       obj->LoadTextures(m_pd3dDevice);
   }
 
-  m_car = m_scene->GetObjectAt(1);
-  m_sun = m_scene->GetObjectAt(2);
-  m_sun->Translate(30, 10, 10);
-  
+  m_sun->Translate(-30, 10, 10);
+  m_table->Translate(10, -1.6f, 10);
+  m_house->Translate(40, -1.6f, 10);
   /* add lights to sun */
   SimpleLight bulb;
   bulb.Pos = XMFLOAT3(0, 0, 0);
@@ -161,14 +147,14 @@ bool MyRender::Init(HWND hwnd)
 
   /* add lights to our car! */
   ProjectorLight newLight;
-  newLight.Pos = XMFLOAT3(7, 0.5, -1.5);
-  newLight.Color = XMFLOAT4(1, 0, 0, 0.5);
+  newLight.Pos = XMFLOAT3(7, 0.5f, -1.5f);
+  newLight.Color = XMFLOAT4(1, 0, 0, 0.5f);
   newLight.angleX = 0.4f;
   newLight.angleY = 0.4f;
   newLight.Direction = XMFLOAT3(1, 0, 0);
   m_car->addProjector(newLight);
 
-  newLight.Pos = XMFLOAT3(7, 0.5, 1.5);
+  newLight.Pos = XMFLOAT3(7, 0.5f, 1.5f);
   m_car->addProjector(newLight);
   /* lights added */
 
@@ -196,8 +182,8 @@ bool MyRender::Init(HWND hwnd)
   float width = 1280.0f;
 	float height = 1024.0f;
   m_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width/height, 0.1f, 500.0f );
-
-  
+    
+  m_createSamplerState();  
   return true;
 }
 
@@ -205,7 +191,7 @@ bool MyRender::Draw()
 {
   static float dfi = 0.02f;
   static float fi = 0.0f;
-  static float radius = 30.0f;
+  static float radius = 40.0f;
   
   float dz = radius * (cos(fi + dfi) - cos(fi));
   float dx = radius * (sin(fi + dfi) - sin(fi));
@@ -278,103 +264,122 @@ bool MyRender::Draw()
   cb.isLightEnabled[1] = m_enablePointLight;
   cb.isLightEnabled[2] = m_enableDirectedLight;
 
+  // draw all objects
+
+  m_pImmediateContext->PSSetSamplers( 0, 1, &m_texSamplerState);
   for (size_t idx = 0; idx < m_scene->GetObjectsNumber(); idx++)
   {
     MyObject *object = m_scene->GetObjectAt(idx);
+    ID3D11PixelShader *pixShader = m_pPixelShader;
+    if (object == m_sun)
+      pixShader = m_pPixelShaderSolid;
 
-    /****************************************************/
-
-    for (size_t meshNumber = 0; meshNumber < object->GetMeshesNumber(); meshNumber++)
-    {
-      D3D11_BUFFER_DESC bd;
-      RtlZeroMemory(&bd, sizeof(bd));
-      bd.Usage = D3D11_USAGE_DEFAULT;
-      bd.ByteWidth = sizeof(SimpleVertex) * object->GetVerticesNumberAt(meshNumber);
-	    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	    bd.CPUAccessFlags = 0;
-
-      D3D11_SUBRESOURCE_DATA data;
-      RtlZeroMemory(&data, sizeof(data));
-      data.pSysMem = object->GetVerticesAt(meshNumber);
-
-      HRESULT hr = m_pd3dDevice->CreateBuffer(&bd, &data, &m_pVertexBuffer);
-      if (FAILED(hr))
-      {
-        Log::Get()->Err("CreateBuffer error for vertex buffer.");
-        return false;
-      }
-      UINT stride = sizeof(SimpleVertex);
-	    UINT offset = 0;
-
-      m_pImmediateContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
-  
-      bd.Usage = D3D11_USAGE_DEFAULT;
-      bd.ByteWidth = sizeof(UINT) * object->GetIndicesNumberAt(meshNumber);
-	    bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	    bd.CPUAccessFlags = 0;
-      data.pSysMem = object->GetIndicesAt(meshNumber);
-	    hr = m_pd3dDevice->CreateBuffer(&bd, &data, &m_pIndexBuffer);
-	    if(FAILED(hr))
-      {
-        Log::Get()->Err("CreateBuffer error for torus.");
-		    return false;
-      }
-      m_pImmediateContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-      switch (object->GetMeshPrimitiveTypeAt(meshNumber))
-      {
-      case aiPrimitiveType_TRIANGLE:
-        m_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        break;
-      case aiPrimitiveType_LINE:
-        m_pImmediateContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-        break;
-      default:
-        Log::Get()->Err("Don't know what topology to use!");
-        break;
-      }
-
-      /****************************************************/
-      XMMATRIX world = XMLoadFloat4x4(&(object->GetWorldMatrix()));
-
-      cb.mWorld = XMMatrixTranspose(world);
-      cb.mView = XMMatrixTranspose(view);
-	    cb.mProjection = XMMatrixTranspose(m_Projection);
-      cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
-      cb.isLightEnabled[3] = 0; // here we store info about if texture for this mesh is enabled
-      if (object->HasTextures()) 
-      {
-        ID3D11ShaderResourceView *tex = object->GetTextureAt(meshNumber);
-        if (tex != nullptr)
-        {  
-          ID3D11SamplerState *sampler = object->GetSampler();
-          m_pImmediateContext->PSSetShaderResources( 0, 1, &tex);
-	        m_pImmediateContext->PSSetSamplers( 0, 1, &sampler);
-          cb.isLightEnabled[3] = 1;
-        }
-      }
-	    m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, NULL, &cb, 0, 0);
-  
-	    m_pImmediateContext->VSSetShader(m_pVertexShader, NULL, 0);
-	    m_pImmediateContext->VSSetConstantBuffers( 0, 1, &m_pConstantBuffer);
-      if (object == m_sun) // absolutely black body
-	      m_pImmediateContext->PSSetShader(m_pPixelShaderSolid, NULL, 0);
-      else
-        m_pImmediateContext->PSSetShader(m_pPixelShader, NULL, 0);
-
-
-
-	    m_pImmediateContext->PSSetConstantBuffers( 0, 1, &m_pConstantBuffer);
-      m_pImmediateContext->DrawIndexed(object->GetIndicesNumberAt(meshNumber), 0, 0);
-
-      _RELEASE(m_pVertexBuffer);
-      _RELEASE(m_pIndexBuffer);
-    }
+    bool drawResult = object->Draw(m_pd3dDevice, m_pImmediateContext, cb, view, m_Projection, m_pVertexShader, pixShader, m_pConstantBuffer);
+    if (!drawResult)
+      return false;
   }
 	return true;
 }
 
+void MyRender::SwitchMipmapFiltration()
+{
+  switch (m_mipmapFiltration)
+  {
+  case MIP_NONE:
+    m_mipmapFiltration = MIP_LINEAR;
+    break;
+  case MIP_LINEAR:
+    m_mipmapFiltration = MIP_NEAREST;
+    break;
+  case MIP_NEAREST:
+    m_mipmapFiltration = MIP_NONE;
+    break;
+  }
+  
+  m_createSamplerState();
+}
+
+void MyRender::SwitchMinFiltration()
+{
+  switch (m_minFiltration)
+  {
+  case MINMAG_LINEAR:
+    m_minFiltration = MINMAG_NEAREST;
+    break;
+  case MINMAG_NEAREST:
+    m_minFiltration = MINMAG_LINEAR;
+    break;
+  }
+
+  m_createSamplerState();
+}
+
+void MyRender::SwitchMagFiltration()
+{
+  switch (m_magFiltration)
+  {
+  case MINMAG_LINEAR:
+    m_magFiltration = MINMAG_NEAREST;
+    break;
+  case MINMAG_NEAREST:
+    m_magFiltration = MINMAG_LINEAR;
+    break;
+  }
+
+  m_createSamplerState();
+}
+
+void MyRender::m_createSamplerState()
+{
+  _RELEASE(m_texSamplerState);
+  D3D11_SAMPLER_DESC sampDesc;
+	ZeroMemory(&sampDesc, sizeof(sampDesc));
+
+  sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+  int filteringCode = 0;
+
+  if (m_mipmapFiltration == MIP_LINEAR)
+    filteringCode |= 1;
+
+  if (m_minFiltration == MINMAG_LINEAR)
+    filteringCode |= 16;
+
+  if (m_magFiltration == MINMAG_LINEAR)
+    filteringCode |= 4;
+
+  D3D11_FILTER filter = (D3D11_FILTER)filteringCode; // oh well... XD
+
+   sampDesc.Filter = filter;
+
+  if (m_mipmapFiltration == MIP_NONE)
+    sampDesc.MaxLOD = 0;
+
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER; 
+  sampDesc.MinLOD = 0;
+  sampDesc.MipLODBias = m_mipmapBias;
+  
+  HRESULT hr = m_pd3dDevice->CreateSamplerState(&sampDesc, &m_texSamplerState);
+}
+
+void MyRender::IncreaseMipmapBias()
+{
+  m_mipmapBias += 0.2f;
+  m_createSamplerState();
+}
+
+void MyRender::DecreaseMipmapBias()
+{
+  m_mipmapBias -= 0.2f;
+  m_createSamplerState();
+}
+
+
 bool MyRender::Close()
 {
+  delete m_scene;
   _RELEASE(m_pVertexBuffer);
 	_RELEASE(m_pVertexLayout);
 	_RELEASE(m_pVertexShader);
@@ -382,6 +387,6 @@ bool MyRender::Close()
   _RELEASE(m_pPixelShaderSolid);
   _RELEASE(m_pIndexBuffer);
   _RELEASE(m_pConstantBuffer);
-  delete m_car;
+  _RELEASE(m_texSamplerState);
   return true;
 }

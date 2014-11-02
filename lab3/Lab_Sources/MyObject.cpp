@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MyObject.h"
 #include "Log.h"
+#include "macros.h"
 #include <cimport.h>
 #include <scene.h>
 #include <postprocess.h>
@@ -195,6 +196,14 @@ MyObject::~MyObject()
   for (SimpleLight *light: m_pointLights)
     delete light;
 
+  if (m_hasTextures)
+  {
+    for (size_t i = 0; i < m_numMeshes; i++)
+    {
+      _RELEASE(m_textures[i]);
+    }
+  }
+
 }
 
 XMFLOAT4X4 MyObject::GetWorldMatrix() const
@@ -286,25 +295,22 @@ HRESULT MyObject::LoadTextures(ID3D11Device *device)
 {
   m_textures = new ID3D11ShaderResourceView*[m_numMeshes];
   HRESULT hr = S_OK;
-  for (int i = 0; i < m_numMeshes; i++)
+
+  	// Create resource view descriptor
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	RtlZeroMemory(&srvDesc, sizeof(srvDesc));
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+  for (size_t i = 0; i < m_numMeshes; i++)
   {
     hr = D3DX11CreateShaderResourceViewFromFile(device, m_textureNames[i].C_Str(), NULL, NULL, m_textures + i, NULL);
     if (FAILED(hr))
       m_textures[i] = nullptr;
+    
   }
-
-  D3D11_SAMPLER_DESC sampDesc;
-	ZeroMemory(&sampDesc, sizeof(sampDesc));
-	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-  sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-  sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-  sampDesc.MinLOD = 0;
-  sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-  
-  hr = device->CreateSamplerState( &sampDesc, &m_texSamplerState);
-
   return S_OK;
 }
 
@@ -315,7 +321,90 @@ ID3D11ShaderResourceView *MyObject::GetTextureAt(size_t idx)
   return m_textures[idx];
 }
 
-ID3D11SamplerState *MyObject::GetSampler()
+bool MyObject::Draw(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ConstantBuffer &cb, const XMMATRIX &view, const XMMATRIX &projection, 
+                    ID3D11VertexShader *vertexShader, ID3D11PixelShader *pixelShader, ID3D11Buffer *constantBuffer)
 {
-  return m_texSamplerState;
+  XMMATRIX world = XMMatrixMultiply(XMLoadFloat4x4(&m_rotate), XMLoadFloat4x4(&m_translate));
+  cb.mWorld = XMMatrixTranspose(world);
+  cb.mView = XMMatrixTranspose(view);
+  cb.mProjection = XMMatrixTranspose(projection);
+
+  for (size_t meshNumber = 0; meshNumber < m_numMeshes; meshNumber++)
+  {
+    ID3D11Buffer *vertexBuffer;
+    ID3D11Buffer *indexBuffer;
+
+    D3D11_BUFFER_DESC bd;
+    RtlZeroMemory(&bd, sizeof(bd));
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(SimpleVertex) * m_verticesNumber[meshNumber];
+	  bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	  bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA data;
+    RtlZeroMemory(&data, sizeof(data));
+    data.pSysMem = m_vertices[meshNumber];
+
+    HRESULT hr = device->CreateBuffer(&bd, &data, &vertexBuffer);
+    if (FAILED(hr))
+    {
+      Log::Get()->Err("CreateBuffer error for vertex buffer.");
+      return false;
+    }
+    UINT stride = sizeof(SimpleVertex);
+	  UINT offset = 0;
+
+    deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+  
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(UINT) * m_indicesNumber[meshNumber];
+	  bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	  bd.CPUAccessFlags = 0;
+    data.pSysMem = m_indices[meshNumber];
+	  hr = device->CreateBuffer(&bd, &data, &indexBuffer);
+	  if(FAILED(hr))
+    {
+      Log::Get()->Err("CreateBuffer error for torus.");
+		  return false;
+    }
+    deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    switch (GetMeshPrimitiveTypeAt(meshNumber))
+    {
+    case aiPrimitiveType_TRIANGLE:
+      deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+      break;
+    case aiPrimitiveType_LINE:
+      deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+      break;
+    default:
+      Log::Get()->Err("Don't know what topology to use!");
+      break;
+  }
+
+  cb.vOutputColor = XMFLOAT4(0, 0, 0, 0);
+  cb.isLightEnabled[3] = 0; // here we store info about if texture for this mesh is enabled
+  if (HasTextures()) 
+  {
+    if (m_textures[meshNumber] != nullptr)
+    {  
+      deviceContext->PSSetShaderResources( 0, 1, m_textures + meshNumber);
+      cb.isLightEnabled[3] = 1;
+    }
+  }
+	deviceContext->UpdateSubresource(constantBuffer, 0, NULL, &cb, 0, 0);
+  
+	deviceContext->VSSetShader(vertexShader, NULL, 0);
+	deviceContext->VSSetConstantBuffers( 0, 1, &constantBuffer);
+  deviceContext->PSSetShader(pixelShader, NULL, 0);
+
+
+
+	deviceContext->PSSetConstantBuffers( 0, 1, &constantBuffer);
+  deviceContext->DrawIndexed(m_indicesNumber[meshNumber], 0, 0);
+
+   _RELEASE(vertexBuffer);
+   _RELEASE(indexBuffer);
+ }
+
+  return true;
 }

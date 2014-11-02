@@ -8,14 +8,14 @@ using namespace D3D11Framework;
 class MyInputListener : public InputListener
 {
 public:
-  MyInputListener() : m_render(0), m_MouseLocked(false), m_mousePressed(false) {}
+  MyInputListener() : m_render(0), m_MouseLocked(false), m_mousePressed(false), m_shiftPressed(false) {}
   void SetRender(MyRender *render)
   {
     m_render = render;
   }
 
   bool KeyPressed(const KeyEvent &event);
-
+  bool KeyReleased(const KeyEvent &arg);
   void SetMouseLocked(bool locked, int x = 0, int y = 0);
   bool MouseMove(const MouseEvent &arg);
   bool MouseWheel(const MouseEventWheel &arg);
@@ -26,4 +26,6 @@ private:
   bool m_MouseLocked;
   POINT m_MousePos;
   bool m_mousePressed;
+
+  bool m_shiftPressed;
 };

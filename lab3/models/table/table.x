@@ -3704,7 +3704,7 @@ Material {
  0.117647;0.117647;0.117647;;
  0.000000;0.000000;0.000000;;
 TextureFilename {
-"planks02.jpg";
+"planks02.dds";
 }
  }
 }
@@ -8309,7 +8309,7 @@ Material {
  0.000000;0.000000;0.000000;;
  0.000000;0.000000;0.000000;;
 TextureFilename {
-"planks01.jpg";
+"planks01.dds";
 }
  }
 Material {
@@ -8318,7 +8318,7 @@ Material {
  0.000000;0.000000;0.000000;;
  0.000000;0.000000;0.000000;;
 TextureFilename {
-"planks02.jpg";
+"planks02.dds";
 }
  }
 }

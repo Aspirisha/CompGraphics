@@ -52,7 +52,7 @@ MyScene::MyScene()
   }
 }
 
-HRESULT MyScene::LoadObject(const char *path, const char *fileName)
+MyObject * MyScene::LoadObject(const char *path, const char *fileName)
 {
   MyObject *newObj = new MyObject;
 
@@ -61,11 +61,11 @@ HRESULT MyScene::LoadObject(const char *path, const char *fileName)
   {
     Log::Get()->Err("Error loading object from file %s", fileName);
     delete newObj;
-    return hr;
+    return nullptr;
   }
 
   m_objects.push_back(newObj);
-  return S_OK;
+  return newObj;
 }
 
 MyObject *MyScene::GetObjectAt(size_t idx)
@@ -83,4 +83,13 @@ XMFLOAT4X4 MyScene::GetProjectorWorldMatrixAt(size_t idx) const
 XMFLOAT4X4 MyScene::GetProjectorRotationMatrixAt(size_t idx) const
 {
   return m_objects[m_projectorObjectNumber[idx]]->GetRotationMatrix();
+}
+
+MyScene::~MyScene()
+{
+  for (MyObject *obj : m_objects)
+  {
+    if (obj != this)
+      delete obj;
+  }
 }
