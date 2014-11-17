@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{AAFB2C83-A18E-47CE-BCA8-A3ED1FBBB529}</ProjectGuid>
+    <ProjectName>Lab4</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Program Files\boost_1_54_0;$(IncludePath)C:\Program Files\boost_1_54_0;$(IncludePath);$(DXSDK_DIR)Include;assimp/include</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(DXSDK_DIR)Lib\x86;</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)\</OutDir>
+    <TargetName>lab-dbg</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)\</OutDir>
+    <IncludePath>C:\Program Files\boost_1_54_0;$(IncludePath)C:\Program Files\boost_1_54_0;$(IncludePath);$(DXSDK_DIR)Include;assimp/include</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(DXSDK_DIR)Lib\x86;assimp</LibraryPath>
+    <TargetName>lab-rel</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Link>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);assimp/</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies);zlibstatic.lib_suf;assimp.lib_suf;</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <PreventDllBinding>true</PreventDllBinding>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>Lab_Headers;Framework</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Link>
+      <AdditionalLibraryDirectories>assimp/</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies);zlibstatic.lib_suf;assimp.lib_suf;</AdditionalDependencies>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>Lab_Headers;Framework</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Lab_Sources\main.cpp" />
+    <ClCompile Include="Lab_Sources\MyCamera.cpp" />
+    <ClCompile Include="Lab_Sources\MyInputListener.cpp" />
+    <ClCompile Include="Lab_Sources\MyNode.cpp" />
+    <ClCompile Include="Lab_Sources\MyObject.cpp" />
+    <ClCompile Include="Lab_Sources\MyRender.cpp" />
+    <ClCompile Include="Framework\Framework.cpp" />
+    <ClCompile Include="Framework\InputMgr.cpp" />
+    <ClCompile Include="Framework\Log.cpp" />
+    <ClCompile Include="Framework\Render.cpp" />
+    <ClCompile Include="Framework\Window.cpp" />
+    <ClCompile Include="Lab_Sources\MyScene.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Lab_Headers\MyCamera.h" />
+    <ClInclude Include="Lab_Headers\MyInputListener.h" />
+    <ClInclude Include="Lab_Headers\MyNode.h" />
+    <ClInclude Include="Lab_Headers\MyObject.h" />
+    <ClInclude Include="Lab_Headers\MyRender.h" />
+    <ClInclude Include="Lab_Headers\MyScene.h" />
+    <ClInclude Include="Lab_Headers\Torus.h" />
+    <ClInclude Include="Framework\Framework.h" />
+    <ClInclude Include="Framework\InputCodes.h" />
+    <ClInclude Include="Framework\InputListener.h" />
+    <ClInclude Include="Framework\InputMgr.h" />
+    <ClInclude Include="Framework\Log.h" />
+    <ClInclude Include="Framework\macros.h" />
+    <ClInclude Include="Framework\Render.h" />
+    <ClInclude Include="Framework\stdafx.h" />
+    <ClInclude Include="Framework\Window.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

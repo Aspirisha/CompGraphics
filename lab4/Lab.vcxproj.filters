@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Framework\Framework.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\InputMgr.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Log.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Render.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Window.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\main.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\MyCamera.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\MyInputListener.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\MyObject.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\MyRender.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\MyScene.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Lab_Sources\MyNode.cpp">
+      <Filter>Lab_sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Framework\Framework.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\InputCodes.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\InputListener.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\InputMgr.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Log.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\macros.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Render.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\stdafx.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\Torus.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Window.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\MyCamera.h">
+      <Filter>Lab_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\MyInputListener.h">
+      <Filter>Lab_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\MyObject.h">
+      <Filter>Lab_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\MyRender.h">
+      <Filter>Lab_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\MyScene.h">
+      <Filter>Lab_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Lab_Headers\MyNode.h">
+      <Filter>Lab_headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Lab_headers">
+      <UniqueIdentifier>{05b2b88f-83d8-444f-adc0-624e7205dc7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lab_sources">
+      <UniqueIdentifier>{bcb80ca4-32a9-4692-8088-2f5ca9a5685d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{189ed673-2556-4665-8162-da93f1c040a6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
